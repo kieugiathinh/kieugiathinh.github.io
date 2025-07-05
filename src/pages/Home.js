@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Box, CssBaseline, ThemeProvider, createTheme, Button, Stack, Typography, IconButton } from "@mui/material";
+import { Box, CssBaseline, ThemeProvider, createTheme, Button, Stack, Typography, IconButton, useTheme, useMediaQuery, CircularProgress, Alert } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db, storage } from "../firebase/config";
-import { collection, addDoc, query, where, onSnapshot, doc, deleteDoc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, doc, deleteDoc, getDoc, updateDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import JSZip from 'jszip';
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import FileList from "../components/FileList";
 import UploadDialog from "../components/UploadDialog";
+import DownloadDialog from "../components/DownloadDialog";
+import ThemeSelector from "../components/ThemeSelector";
+import ThemeInfo from "../components/ThemeInfo";
 import Login from "./Login";
 import AccountInfo from "./AccountInfo";
 import fuzzysort from 'fuzzysort';
+import { useResponsive } from "../hooks/useResponsive";
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0B';
@@ -42,11 +47,38 @@ export default function Home() {
   const [isTrash, setIsTrash] = useState(false);
   const [trashItems, setTrashItems] = useState([]);
   const [search, setSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadError, setDownloadError] = useState("");
+  const [downloadDialog, setDownloadDialog] = useState({
+    open: false,
+    item: null,
+    filesInFolder: [],
+    loading: false
+  });
+  const [themeDialog, setThemeDialog] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState(() => {
+    const saved = localStorage.getItem('selectedTheme');
+    return saved ? JSON.parse(saved) : {
+      name: "Ocean Blue",
+      primary: "#1976d2",
+      secondary: "#42a5f5",
+      background: "#e3f2fd",
+      paper: "#ffffff"
+    };
+  });
+  const { isMobile, isTablet } = useResponsive();
 
   // Lưu darkMode vào localStorage mỗi khi thay đổi
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
+
+  // Lưu selectedTheme vào localStorage mỗi khi thay đổi
+  useEffect(() => {
+    localStorage.setItem('selectedTheme', JSON.stringify(selectedTheme));
+  }, [selectedTheme]);
 
   // Lấy thông tin folder hiện tại để biết folder cha
   useEffect(() => {
@@ -162,6 +194,162 @@ export default function Home() {
     });
   };
 
+  // Hàm lấy tất cả file trong folder (đệ quy)
+  const getAllFilesInFolder = async (folderId, folderPath = "") => {
+    const files = [];
+    const q = query(
+      collection(db, "files"),
+      where("parent", "==", folderId),
+      where("owner", "==", user.uid),
+      where("isDeleted", "!=", true)
+    );
+    const snapshot = await getDocs(q);
+    
+    for (const docSnap of snapshot.docs) {
+      const item = { id: docSnap.id, ...docSnap.data() };
+      const currentPath = folderPath ? `${folderPath}/${item.name}` : item.name;
+      
+      if (item.type === "file") {
+        files.push({
+          ...item,
+          path: currentPath
+        });
+      } else if (item.type === "folder") {
+        const subFiles = await getAllFilesInFolder(item.id, currentPath);
+        files.push(...subFiles);
+      }
+    }
+    
+    return files;
+  };
+
+  // Hàm download file đơn lẻ
+  const downloadSingleFile = async (file) => {
+    try {
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Lỗi khi tải file:', error);
+      setDownloadError('Không thể tải file. Vui lòng thử lại.');
+    }
+  };
+
+  // Hàm download folder (nén thành zip)
+  const downloadFolder = async (folder) => {
+    try {
+      setDownloading(true);
+      setDownloadProgress(0);
+      setDownloadError("");
+      
+      const zip = new JSZip();
+      const files = await getAllFilesInFolder(folder.id);
+      
+      if (files.length === 0) {
+        setDownloadError('Thư mục trống, không có gì để tải xuống.');
+        setDownloading(false);
+        return;
+      }
+      
+      let completedFiles = 0;
+      
+      for (const file of files) {
+        try {
+          const response = await fetch(file.url);
+          const blob = await response.blob();
+          zip.file(file.path, blob);
+          
+          completedFiles++;
+          setDownloadProgress((completedFiles / files.length) * 100);
+        } catch (error) {
+          console.error(`Lỗi khi tải file ${file.name}:`, error);
+        }
+      }
+      
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = window.URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${folder.name}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setDownloading(false);
+      setDownloadProgress(0);
+    } catch (error) {
+      console.error('Lỗi khi tải folder:', error);
+      setDownloadError('Không thể tải thư mục. Vui lòng thử lại.');
+      setDownloading(false);
+      setDownloadProgress(0);
+    }
+  };
+
+  // Hàm xử lý download chung
+  const handleDownload = async (item) => {
+    if (item.type === "file") {
+      // Với file, download trực tiếp
+      await downloadSingleFile(item);
+    } else if (item.type === "folder") {
+      // Với folder, hiển thị dialog trước
+      setDownloadDialog({
+        open: true,
+        item: item,
+        filesInFolder: [],
+        loading: true
+      });
+      
+      // Lấy danh sách file trong folder
+      try {
+        const files = await getAllFilesInFolder(item.id);
+        setDownloadDialog(prev => ({
+          ...prev,
+          filesInFolder: files,
+          loading: false
+        }));
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách file:', error);
+        setDownloadDialog(prev => ({
+          ...prev,
+          loading: false
+        }));
+      }
+    }
+  };
+
+  // Hàm xác nhận download từ dialog
+  const handleConfirmDownload = async () => {
+    if (downloadDialog.item) {
+      setDownloadDialog({ open: false, item: null, filesInFolder: [], loading: false });
+      if (downloadDialog.item.type === "folder") {
+        await downloadFolder(downloadDialog.item);
+      }
+    }
+  };
+
+  // Hàm đóng dialog download
+  const handleCloseDownloadDialog = () => {
+    setDownloadDialog({ open: false, item: null, filesInFolder: [], loading: false });
+  };
+
+  // Hàm xử lý thay đổi theme
+  const handleThemeChange = (theme) => {
+    setSelectedTheme(theme);
+  };
+
+  // Hàm mở dialog chọn theme
+  const handleThemeClick = () => {
+    setThemeDialog(true);
+  };
+
   if (loading) return <div>Đang tải...</div>;
   if (!user) return <Login />;
 
@@ -169,15 +357,63 @@ export default function Home() {
     palette: {
       mode: darkMode ? "dark" : "light",
       background: {
-        default: darkMode ? "#181a20" : bgColor,
-        paper: darkMode ? "#23272f" : "#fff"
+        default: darkMode ? "#181a20" : selectedTheme.background,
+        paper: darkMode ? "#23272f" : selectedTheme.paper
       },
-      primary: { main: darkMode ? "#bb86fc" : "#7b1fa2" },
-      secondary: { main: darkMode ? "#03dac6" : "#ad1457" }
+      primary: { 
+        main: darkMode ? "#bb86fc" : selectedTheme.primary,
+        light: darkMode ? "#d4a4fc" : `${selectedTheme.primary}20`
+      },
+      secondary: { 
+        main: darkMode ? "#03dac6" : selectedTheme.secondary,
+        light: darkMode ? "#66d9d1" : `${selectedTheme.secondary}20`
+      }
     },
     typography: {
       fontFamily: 'Arima, sans-serif',
     },
+    breakpoints: {
+      values: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+      },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            textTransform: 'none',
+            fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            '&:hover': {
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              transform: 'translateY(-1px)'
+            },
+            transition: 'all 0.3s ease'
+          }
+        }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          }
+        }
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          }
+        }
+      }
+    }
   });
 
   if (showAccount) {
@@ -201,8 +437,16 @@ export default function Home() {
           currentFolder={currentFolder}
           isTrash={isTrash}
           setIsTrash={setIsTrash}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2 }}>
+        <Box sx={{ 
+          flex: 1, 
+          display: "flex", 
+          flexDirection: "column", 
+          p: isMobile ? 1 : 2,
+          width: '100%'
+        }}>
           <Header
             onSearch={value => setSearch(value)}
             onAccountInfo={() => setShowAccount(true)}
@@ -210,11 +454,63 @@ export default function Home() {
             setDarkMode={setDarkMode}
             bgColor={bgColor}
             setBgColor={setBgColor}
+            onMenuClick={() => setSidebarOpen(true)}
+            onThemeClick={handleThemeClick}
+            selectedTheme={selectedTheme}
+            setSelectedTheme={setSelectedTheme}
           />
-          <Box sx={{ flex: 1, borderRadius: 2, p: 2, bgcolor: 'background.paper', boxShadow: 2, minHeight: 400 }}>
+          <Box sx={{ 
+            flex: 1, 
+            borderRadius: 3, 
+            p: isMobile ? 1 : 2, 
+            bgcolor: 'background.paper', 
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)', 
+            minHeight: isMobile ? 300 : 400 
+          }}>
+            {/* Hiển thị thông báo lỗi download */}
+            {downloadError && (
+              <Alert 
+                severity="error" 
+                onClose={() => setDownloadError("")}
+                sx={{ mb: 2, borderRadius: 2 }}
+              >
+                {downloadError}
+              </Alert>
+            )}
+            
+            {/* Hiển thị progress download */}
+            {downloading && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                mb: 2, 
+                p: 2, 
+                bgcolor: 'primary.light', 
+                borderRadius: 2,
+                color: 'white'
+              }}>
+                <CircularProgress size={24} color="inherit" />
+                <Typography>
+                  Đang tải xuống... {Math.round(downloadProgress)}%
+                </Typography>
+              </Box>
+            )}
+            
+            {/* Hiển thị thông tin bảng màu */}
+            {/* Đã bỏ ThemeInfo theo yêu cầu */}
+            
             {isTrash ? (
               <>
-                <Typography variant="h6" fontWeight={700} color="primary" mb={2}>Thùng rác</Typography>
+                <Typography 
+                  variant="h6" 
+                  fontWeight={700} 
+                  color="primary" 
+                  mb={2}
+                  sx={{ fontSize: isMobile ? 18 : 24 }}
+                >
+                  Thùng rác
+                </Typography>
                 <FileList
                   items={trashItems}
                   onDelete={handlePermanentDelete}
@@ -224,14 +520,34 @@ export default function Home() {
               </>
             ) : (
               <>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+                <Stack 
+                  direction={isMobile ? "column" : "row"} 
+                  alignItems={isMobile ? "stretch" : "center"} 
+                  justifyContent="space-between" 
+                  mb={2}
+                  spacing={isMobile ? 1 : 0}
+                >
                   <Stack direction="row" alignItems="center" spacing={1}>
                     {currentFolder && (
-                      <Button startIcon={<ArrowBackIcon />} variant="outlined" color="primary" onClick={() => setCurrentFolder(parentFolder)}>
+                      <Button 
+                        startIcon={<ArrowBackIcon />} 
+                        variant="outlined" 
+                        color="primary" 
+                        onClick={() => setCurrentFolder(parentFolder)}
+                        sx={{ 
+                          fontSize: isMobile ? 12 : 14,
+                          py: isMobile ? 0.5 : 1
+                        }}
+                      >
                         Quay về
                       </Button>
                     )}
-                    <Typography variant="h6" fontWeight={700} color="primary">
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={700} 
+                      color="primary"
+                      sx={{ fontSize: isMobile ? 16 : 20 }}
+                    >
                       {currentFolder ? currentFolderName : "Trang chủ"}
                     </Typography>
                   </Stack>
@@ -240,7 +556,12 @@ export default function Home() {
                     startIcon={<AddCircleOutlineIcon />}
                     color="secondary"
                     onClick={() => setOpenDialog(true)}
-                    sx={{ fontWeight: 600, borderRadius: 2 }}
+                    sx={{ 
+                      fontWeight: 600, 
+                      borderRadius: 2,
+                      fontSize: isMobile ? 12 : 14,
+                      py: isMobile ? 0.5 : 1
+                    }}
                   >
                     Tải lên
                   </Button>
@@ -249,6 +570,7 @@ export default function Home() {
                   items={search ? fuzzysort.go(search, items, { key: 'name', allowTypo: true, threshold: -10000 }).map(r => ({ ...r.obj, _highlight: r })) : items.map(i => ({ ...i, _highlight: null }))}
                   onDelete={handleSoftDelete}
                   onOpenFolder={folder => setCurrentFolder(folder.id)}
+                  onDownload={handleDownload}
                   search={search}
                 />
               </>
@@ -260,6 +582,25 @@ export default function Home() {
           onClose={() => setOpenDialog(false)}
           onUpload={handleUpload}
           onCreateFolder={handleCreateFolder}
+          currentFolderName={currentFolder ? currentFolderName : "Trang chủ"}
+        />
+        
+        {/* Download Dialog */}
+        <DownloadDialog
+          open={downloadDialog.open}
+          onClose={handleCloseDownloadDialog}
+          onConfirm={handleConfirmDownload}
+          item={downloadDialog.item}
+          filesInFolder={downloadDialog.filesInFolder}
+          loading={downloadDialog.loading}
+        />
+        
+        {/* Theme Selector Dialog */}
+        <ThemeSelector
+          open={themeDialog}
+          onClose={() => setThemeDialog(false)}
+          currentTheme={selectedTheme}
+          onThemeChange={handleThemeChange}
         />
       </Box>
       <Box sx={{ position: 'fixed', bottom: 10, right: 20, zIndex: 9999 }}></Box>

@@ -1,32 +1,85 @@
 import React from "react";
-import { Avatar, Box, InputBase, IconButton, Paper } from "@mui/material";
+import { Avatar, Box, InputBase, IconButton, Paper, useTheme, useMediaQuery, Tooltip } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import MenuIcon from "@mui/icons-material/Menu";
+import PaletteIcon from "@mui/icons-material/Palette";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase/config";
 import AvatarMenu from "./AvatarMenu";
+import { useResponsive } from "../hooks/useResponsive";
 
-export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor }) {
+export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor, onMenuClick, onThemeClick, selectedTheme, setSelectedTheme }) {
   const [user] = useAuthState(auth);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const { isMobile, isTablet } = useResponsive();
+  const theme = useTheme();
 
   return (
-    <Paper elevation={3} sx={{ display: "flex", alignItems: "center", p: 2, bgcolor: 'background.paper', borderRadius: 2, mb: 2 }}>
+    <Paper elevation={3} sx={{ 
+      display: "flex", 
+      alignItems: "center", 
+      p: isMobile ? 1.5 : 2, 
+      bgcolor: 'background.paper', 
+      borderRadius: 2, 
+      mb: 2 
+    }}>
+      {isMobile && (
+        <IconButton 
+          onClick={onMenuClick}
+          sx={{ mr: 1, color: 'primary.main' }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
       <Paper
         component="form"
-        sx={{ flex: 1, display: "flex", alignItems: "center", bgcolor: 'background.default', borderRadius: 2, px: 2, boxShadow: 0 }}
+        sx={{ 
+          flex: 1, 
+          display: "flex", 
+          alignItems: "center", 
+          bgcolor: 'background.default', 
+          borderRadius: 2, 
+          px: isMobile ? 1.5 : 2, 
+          boxShadow: 0 
+        }}
       >
-        <SearchIcon sx={{ color: 'secondary.main' }} />
+        <SearchIcon sx={{ color: 'secondary.main', fontSize: isMobile ? 20 : 24 }} />
         <InputBase
           placeholder="Tìm kiếm thư mục"
-          sx={{ ml: 1, flex: 1, fontSize: 18, color: 'text.primary' }}
+          sx={{ 
+            ml: 1, 
+            flex: 1, 
+            fontSize: isMobile ? 14 : 18, 
+            color: 'text.primary' 
+          }}
           onChange={e => onSearch && onSearch(e.target.value)}
         />
       </Paper>
-      <Box sx={{ ml: 3 }}>
+      <Box sx={{ ml: isMobile ? 1.5 : 3 }}>
         {user && (
           <>
-            <IconButton onClick={e => setAnchorEl(e.currentTarget)} sx={{ p: 0, border: '2.5px solid', borderColor: 'transparent', boxShadow: 2, background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', transition: 'border-color 0.3s, box-shadow 0.3s' }}>
-              <Avatar src={user.photoURL} sx={{ width: 48, height: 48, border: '2.5px solid #fff', boxShadow: '0 2px 8px 0 rgba(123,31,162,0.10)', background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', transition: 'border-color 0.3s, box-shadow 0.3s' }} />
+            <IconButton 
+              onClick={e => setAnchorEl(e.currentTarget)} 
+              sx={{ 
+                p: 0, 
+                border: '2.5px solid', 
+                borderColor: 'transparent', 
+                boxShadow: 2, 
+                background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', 
+                transition: 'border-color 0.3s, box-shadow 0.3s' 
+              }}
+            >
+              <Avatar 
+                src={user.photoURL} 
+                sx={{ 
+                  width: isMobile ? 40 : 48, 
+                  height: isMobile ? 40 : 48, 
+                  border: '2.5px solid #fff', 
+                  boxShadow: '0 2px 8px 0 rgba(123,31,162,0.10)', 
+                  background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', 
+                  transition: 'border-color 0.3s, box-shadow 0.3s' 
+                }} 
+              />
             </IconButton>
             <AvatarMenu
               anchorEl={anchorEl}
@@ -37,6 +90,8 @@ export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode,
               setDarkMode={setDarkMode}
               bgColor={bgColor}
               setBgColor={setBgColor}
+              selectedTheme={selectedTheme}
+              setSelectedTheme={setSelectedTheme}
             />
           </>
         )}

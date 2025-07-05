@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent, Button, TextField, Stack, Typography, LinearProgress, Alert, IconButton, Box } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, Button, TextField, Stack, Typography, LinearProgress, Alert, IconButton, Box, useTheme, useMediaQuery } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import CloseIcon from "@mui/icons-material/Close";
+import { useResponsive } from "../hooks/useResponsive";
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0B';
@@ -12,13 +13,15 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export default function UploadDialog({ open, onClose, onUpload, onCreateFolder }) {
+export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, currentFolderName = "Trang chủ" }) {
   const [file, setFile] = useState(null);
   const [folderName, setFolderName] = useState("");
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const { isMobile, isTablet } = useResponsive();
+  const theme = useTheme();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -44,6 +47,11 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder }
       setProgress(100);
       setMessage("Tải lên thành công!");
       setFile(null);
+      
+      // Tự động đóng dialog sau 1 giây khi upload thành công
+      setTimeout(() => {
+        handleClose();
+      }, 1000);
     } catch (e) {
       setError("Tải lên thất bại. Vui lòng thử lại!");
     }
@@ -62,20 +70,58 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder }
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, color: '#7b1fa2' }}>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth={isMobile ? "sm" : "xs"} 
+      fullWidth
+      fullScreen={isMobile}
+    >
+      <DialogTitle sx={{ 
+        textAlign: 'center', 
+        fontWeight: 700, 
+        color: '#7b1fa2',
+        fontSize: isMobile ? 20 : 24
+      }}>
         Tạo mới
-        <IconButton onClick={handleClose} sx={{ position: 'absolute', right: 12, top: 12 }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: isMobile ? 12 : 14,
+            color: 'text.secondary',
+            mt: 1,
+            fontWeight: 400
+          }}
+        >
+          Thư mục: {currentFolderName}
+        </Typography>
+        <IconButton 
+          onClick={handleClose} 
+          sx={{ 
+            position: 'absolute', 
+            right: isMobile ? 16 : 12, 
+            top: isMobile ? 16 : 12 
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <Stack spacing={3} alignItems="center" sx={{ py: 2 }}>
+        <Stack spacing={isMobile ? 2 : 3} alignItems="center" sx={{ py: isMobile ? 1 : 2 }}>
           <Button
             variant="contained"
             component="label"
             startIcon={<CloudUploadIcon />}
-            sx={{ bgcolor: '#ad1457', color: '#fff', fontWeight: 600, borderRadius: 2, ':hover': { bgcolor: '#7b1fa2' } }}
+            sx={{ 
+              bgcolor: '#ad1457', 
+              color: '#fff', 
+              fontWeight: 600, 
+              borderRadius: 2, 
+              fontSize: isMobile ? 14 : 16,
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 1 : 1.5,
+              ':hover': { bgcolor: '#7b1fa2' } 
+            }}
             disabled={uploading}
           >
             {file ? "Chọn lại file" : "Chọn file"}
@@ -83,40 +129,96 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder }
           </Button>
           {file && (
             <Box sx={{ width: '100%', textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>{file.name}</Typography>
-              <Typography variant="caption" sx={{ color: '#888' }}>{formatBytes(file.size)}</Typography>
+              <Typography variant="body2" sx={{ 
+                fontWeight: 500, 
+                fontSize: isMobile ? 14 : 16,
+                wordBreak: 'break-word'
+              }}>
+                {file.name}
+              </Typography>
+              <Typography variant="caption" sx={{ 
+                color: '#888',
+                fontSize: isMobile ? 12 : 14
+              }}>
+                {formatBytes(file.size)}
+              </Typography>
             </Box>
           )}
           {progress > 0 && (
             <Box sx={{ width: '100%' }}>
-              <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 2 }} />
+              <LinearProgress 
+                variant="determinate" 
+                value={progress} 
+                sx={{ 
+                  height: isMobile ? 6 : 8, 
+                  borderRadius: 2 
+                }} 
+              />
             </Box>
           )}
           <Button
             variant="contained"
             startIcon={<CloudUploadIcon />}
-            sx={{ bgcolor: '#7b1fa2', color: '#fff', fontWeight: 600, borderRadius: 2, width: '100%' }}
+            sx={{ 
+              bgcolor: '#7b1fa2', 
+              color: '#fff', 
+              fontWeight: 600, 
+              borderRadius: 2, 
+              width: '100%',
+              fontSize: isMobile ? 14 : 16,
+              py: isMobile ? 1 : 1.5
+            }}
             onClick={handleUpload}
             disabled={!file || uploading}
           >
             {uploading ? "Đang tải lên..." : "Upload file"}
           </Button>
-          {message && <Alert severity="success" sx={{ width: '100%' }}>{message}</Alert>}
+          {message && (
+            <Alert 
+              severity="success" 
+              sx={{ width: '100%' }}
+              action={
+                <Button 
+                  color="inherit" 
+                  size="small" 
+                  onClick={handleClose}
+                  sx={{ fontSize: isMobile ? 12 : 14 }}
+                >
+                  Đóng
+                </Button>
+              }
+            >
+              {message}
+            </Alert>
+          )}
           {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
-          <Typography variant="body2" sx={{ color: '#888' }}>Hoặc tạo thư mục mới</Typography>
+          <Typography variant="body2" sx={{ 
+            color: '#888',
+            fontSize: isMobile ? 14 : 16
+          }}>
+            Hoặc tạo thư mục mới
+          </Typography>
           <TextField
             label="Tên thư mục"
             value={folderName}
             onChange={e => setFolderName(e.target.value)}
             fullWidth
-            size="small"
+            size={isMobile ? "small" : "medium"}
             sx={{ borderRadius: 2 }}
             disabled={uploading}
           />
           <Button
             variant="contained"
             startIcon={<CreateNewFolderIcon />}
-            sx={{ bgcolor: '#43a047', color: '#fff', fontWeight: 600, borderRadius: 2, width: '100%' }}
+            sx={{ 
+              bgcolor: '#43a047', 
+              color: '#fff', 
+              fontWeight: 600, 
+              borderRadius: 2, 
+              width: '100%',
+              fontSize: isMobile ? 14 : 16,
+              py: isMobile ? 1 : 1.5
+            }}
             onClick={() => { if (folderName) { onCreateFolder(folderName); setFolderName(""); handleClose(); } }}
             disabled={!folderName || uploading}
           >

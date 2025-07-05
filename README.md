@@ -1,70 +1,105 @@
-# Getting Started with Create React App
+# GTCloud - Cloud Storage App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Ứng dụng lưu trữ đám mây được xây dựng với React và Firebase, cung cấp khả năng quản lý file và folder một cách dễ dàng.
 
-## Available Scripts
+## ✨ Tính năng chính
 
-In the project directory, you can run:
+### 📁 Quản lý File & Folder
+- Tạo thư mục mới
+- Upload file lên cloud storage
+- Xem danh sách file và thư mục
+- Điều hướng qua các thư mục con
+- Tìm kiếm file và thư mục
 
-### `npm start`
+### ⬇️ Download (Tính năng mới!)
+- **Download file đơn lẻ**: Tải xuống file trực tiếp với tên gốc
+- **Download folder**: Tự động nén thành file ZIP với tên thư mục
+- **Progress tracking**: Hiển thị tiến trình download với thanh progress
+- **Preview dialog**: Xem trước nội dung folder trước khi download
+- **Error handling**: Xử lý lỗi và hiển thị thông báo rõ ràng
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🗑️ Thùng rác
+- Xóa mềm (chuyển vào thùng rác)
+- Khôi phục file/folder từ thùng rác
+- Xóa vĩnh viễn
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🎨 Giao diện
+- Responsive design cho mobile và desktop
+- Dark mode / Light mode
+- Tùy chỉnh màu nền
+- Material-UI components
 
-### `npm test`
+## 🚀 Cài đặt và chạy
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Yêu cầu
+- Node.js (version 14 trở lên)
+- npm hoặc yarn
 
-### `npm run build`
+### Cài đặt dependencies
+```bash
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Chạy development server
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Build cho production
+```bash
+npm run build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📦 Dependencies chính
 
-### `npm run eject`
+- **React 19.1.0** - Framework UI
+- **Material-UI 7.2.0** - Component library
+- **Firebase 11.10.0** - Backend services
+- **JSZip** - Nén folder thành ZIP
+- **Fuzzysort** - Tìm kiếm mờ
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🔧 Cấu hình Firebase
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Dự án sử dụng Firebase cho:
+- **Authentication**: Đăng nhập/đăng ký
+- **Firestore**: Lưu trữ metadata file/folder
+- **Storage**: Lưu trữ file thực tế
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 📱 Responsive Design
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Ứng dụng được tối ưu cho:
+- **Desktop**: Giao diện đầy đủ với sidebar
+- **Tablet**: Layout thích ứng
+- **Mobile**: Giao diện tối ưu cho màn hình nhỏ
 
-## Learn More
+## 🎯 Cách sử dụng Download
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Download File
+1. Click vào nút download (⬇️) bên cạnh file
+2. File sẽ được tải xuống ngay lập tức
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Download Folder
+1. Click vào nút download (⬇️) bên cạnh folder
+2. Dialog hiển thị thông tin folder và danh sách file bên trong
+3. Xem trước nội dung và kích thước
+4. Click "Tải xuống" để bắt đầu quá trình nén và download
+5. Theo dõi tiến trình qua thanh progress
+6. File ZIP sẽ được tải xuống với tên `[tên_folder].zip`
 
-### Code Splitting
+## 🔒 Bảo mật
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Mỗi user chỉ có thể truy cập file/folder của mình
+- Authentication qua Firebase Auth
+- File được lưu trữ an toàn trên Firebase Storage
 
-### Analyzing the Bundle Size
+## 📄 License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+MIT License - Xem file LICENSE để biết thêm chi tiết.
 
-### Making a Progressive Web App
+## 🤝 Đóng góp
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Mọi đóng góp đều được chào đón! Vui lòng tạo issue hoặc pull request.
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**GTCloud** - Nơi lưu trữ đám mây đơn giản và hiệu quả! ☁️

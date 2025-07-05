@@ -7,7 +7,7 @@ import PaletteIcon from "@mui/icons-material/Palette";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ThemeDialog from "./ThemeDialog";
 
-export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor }) {
+export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor, selectedTheme, setSelectedTheme }) {
   const open = Boolean(anchorEl);
   const [openTheme, setOpenTheme] = useState(false);
 
@@ -45,10 +45,10 @@ export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo,
       <ThemeDialog
         open={openTheme}
         onClose={() => setOpenTheme(false)}
+        selectedTheme={selectedTheme}
+        setSelectedTheme={setSelectedTheme}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
-        bgColor={bgColor}
-        setBgColor={setBgColor}
       />
     </>
   );

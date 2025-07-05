@@ -1,10 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Arima:wght@400;600;700&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
   font-family: 'Arima', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
 }
 
 code {
@@ -132,4 +154,54 @@ body[data-mui-color-scheme="dark"] .MuiIconButton-root:hover {
 .MuiAvatar-root:hover {
   border-color: #b39ddb;
   box-shadow: 0 2px 12px 0 rgba(94,84,142,0.13);
+}
+
+/********************** RESPONSIVE UTILITIES **********************/
+/* Touch-friendly buttons on mobile */
+@media (max-width: 768px) {
+  .MuiButton-root {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .MuiIconButton-root {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .MuiTextField-root {
+    margin-bottom: 8px;
+  }
+}
+
+/* Improved scrolling on mobile */
+@media (max-width: 768px) {
+  .MuiBox-root {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .MuiList-root {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Better text wrapping */
+.MuiTypography-root {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Improved focus states for accessibility */
+.MuiButton-root:focus-visible,
+.MuiIconButton-root:focus-visible,
+.MuiTextField-root:focus-visible {
+  outline: 2px solid #7b1fa2;
+  outline-offset: 2px;
+}
+
+/* Dark mode focus states */
+body[data-mui-color-scheme="dark"] .MuiButton-root:focus-visible,
+body[data-mui-color-scheme="dark"] .MuiIconButton-root:focus-visible,
+body[data-mui-color-scheme="dark"] .MuiTextField-root:focus-visible {
+  outline-color: #bb86fc;
 }
