@@ -86,20 +86,4 @@ Dự án sử dụng Firebase cho:
 5. Theo dõi tiến trình qua thanh progress
 6. File ZIP sẽ được tải xuống với tên `[tên_folder].zip`
 
-## 🔒 Bảo mật
-
-- Mỗi user chỉ có thể truy cập file/folder của mình
-- Authentication qua Firebase Auth
-- File được lưu trữ an toàn trên Firebase Storage
-
-## 📄 License
-
-MIT License - Xem file LICENSE để biết thêm chi tiết.
-
-## 🤝 Đóng góp
-
-Mọi đóng góp đều được chào đón! Vui lòng tạo issue hoặc pull request.
-
----
-
 **GTCloud** - Nơi lưu trữ đám mây đơn giản và hiệu quả! ☁️
