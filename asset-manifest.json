@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/gtstorage/static/css/main.809bf3c1.css",
+    "main.js": "/gtstorage/static/js/main.899f52ed.js",
+    "static/js/453.9f9ef248.chunk.js": "/gtstorage/static/js/453.9f9ef248.chunk.js",
+    "index.html": "/gtstorage/index.html",
+    "main.809bf3c1.css.map": "/gtstorage/static/css/main.809bf3c1.css.map",
+    "main.899f52ed.js.map": "/gtstorage/static/js/main.899f52ed.js.map",
+    "453.9f9ef248.chunk.js.map": "/gtstorage/static/js/453.9f9ef248.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.809bf3c1.css",
+    "static/js/main.899f52ed.js"
+  ]
+}
