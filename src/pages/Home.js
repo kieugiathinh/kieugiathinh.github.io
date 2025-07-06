@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Box, CssBaseline, ThemeProvider, createTheme, Button, Stack, Typography, IconButton, useTheme, useMediaQuery, CircularProgress, Alert } from "@mui/material";
+import { Box, CssBaseline, ThemeProvider, createTheme, Button, Stack, Typography, IconButton, useTheme, useMediaQuery, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { createThemeFromPalette } from "../utils/themeUtils";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
+import EmailIcon from "@mui/icons-material/Email";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db, storage } from "../firebase/config";
 import { collection, addDoc, query, where, onSnapshot, doc, deleteDoc, getDoc, updateDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { sendEmailVerification, signOut } from "firebase/auth";
 import JSZip from 'jszip';
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
@@ -69,6 +71,9 @@ export default function Home() {
       paper: "#ffffff"
     };
   });
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [emailVerificationLoading, setEmailVerificationLoading] = useState(false);
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
   const { isMobile, isTablet } = useResponsive();
 
   // Lưu darkMode vào localStorage mỗi khi thay đổi
@@ -80,6 +85,13 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('selectedTheme', JSON.stringify(selectedTheme));
   }, [selectedTheme]);
+
+  // Kiểm tra trạng thái xác thực email khi user đăng nhập
+  useEffect(() => {
+    if (user && !user.emailVerified && user.providerData[0]?.providerId === 'password') {
+      setShowEmailVerification(true);
+    }
+  }, [user]);
 
   // Lấy thông tin folder hiện tại để biết folder cha
   useEffect(() => {
@@ -351,6 +363,26 @@ export default function Home() {
     setThemeDialog(true);
   };
 
+  const handleResendVerificationEmail = async () => {
+    setEmailVerificationLoading(true);
+    setEmailVerificationMessage("");
+    try {
+      await sendEmailVerification(user, {
+        url: window.location.origin,
+        handleCodeInApp: false
+      });
+      setEmailVerificationMessage("Email xác thực đã được gửi lại! Vui lòng kiểm tra hộp thư.");
+    } catch (error) {
+      setEmailVerificationMessage("Không thể gửi email xác thực: " + error.message);
+    }
+    setEmailVerificationLoading(false);
+  };
+
+  const handleCloseEmailVerification = () => {
+    setShowEmailVerification(false);
+    setEmailVerificationMessage("");
+  };
+
   if (loading) return <div>Đang tải...</div>;
   if (!user) return <Login />;
 
@@ -542,6 +574,59 @@ export default function Home() {
           currentTheme={selectedTheme}
           onThemeChange={handleThemeChange}
         />
+
+        {/* Email Verification Dialog */}
+        <Dialog 
+          open={showEmailVerification} 
+          onClose={handleCloseEmailVerification}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            color: 'primary.main'
+          }}>
+            <EmailIcon />
+            Xác thực Email
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ mb: 2 }}>
+              Email của bạn <strong>{user?.email}</strong> chưa được xác thực.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác thực để sử dụng đầy đủ tính năng của GTCloud.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Không nhận được email? Kiểm tra thư mục spam hoặc nhấn nút "Gửi lại" bên dưới.
+            </Typography>
+            {emailVerificationMessage && (
+              <Alert 
+                severity={emailVerificationMessage.includes('thành công') ? 'success' : 'error'} 
+                sx={{ mb: 2 }}
+              >
+                {emailVerificationMessage}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button 
+              onClick={handleCloseEmailVerification}
+              variant="outlined"
+            >
+              Đóng
+            </Button>
+            <Button 
+              onClick={handleResendVerificationEmail}
+              variant="contained"
+              disabled={emailVerificationLoading}
+              startIcon={<EmailIcon />}
+            >
+              {emailVerificationLoading ? "Đang gửi..." : "Gửi lại"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
       <Box sx={{ position: 'fixed', bottom: 10, right: 20, zIndex: 9999 }}></Box>
     </ThemeProvider>

@@ -20,8 +20,21 @@ function App() {
 
     // Lắng nghe thay đổi trạng thái authentication
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
+      // Kiểm tra nếu user tồn tại nhưng email chưa xác thực
+      if (user && !user.emailVerified) {
+        // Đăng xuất user nếu email chưa xác thực
+        auth.signOut().then(() => {
+          setUser(null);
+          setLoading(false);
+        }).catch((error) => {
+          console.error("Lỗi khi đăng xuất:", error);
+          setUser(null);
+          setLoading(false);
+        });
+      } else {
+        setUser(user);
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
