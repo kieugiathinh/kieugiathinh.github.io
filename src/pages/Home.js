@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, CssBaseline, ThemeProvider, createTheme, Button, Stack, Typography, IconButton, useTheme, useMediaQuery, CircularProgress, Alert } from "@mui/material";
+import { createThemeFromPalette } from "../utils/themeUtils";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -353,68 +354,7 @@ export default function Home() {
   if (loading) return <div>Đang tải...</div>;
   if (!user) return <Login />;
 
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? "dark" : "light",
-      background: {
-        default: darkMode ? "#181a20" : selectedTheme.background,
-        paper: darkMode ? "#23272f" : selectedTheme.paper
-      },
-      primary: { 
-        main: darkMode ? "#bb86fc" : selectedTheme.primary,
-        light: darkMode ? "#d4a4fc" : `${selectedTheme.primary}20`
-      },
-      secondary: { 
-        main: darkMode ? "#03dac6" : selectedTheme.secondary,
-        light: darkMode ? "#66d9d1" : `${selectedTheme.secondary}20`
-      }
-    },
-    typography: {
-      fontFamily: 'Arima, sans-serif',
-    },
-    breakpoints: {
-      values: {
-        xs: 0,
-        sm: 600,
-        md: 960,
-        lg: 1280,
-        xl: 1920,
-      },
-    },
-    components: {
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
-            textTransform: 'none',
-            fontWeight: 600,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            '&:hover': {
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              transform: 'translateY(-1px)'
-            },
-            transition: 'all 0.3s ease'
-          }
-        }
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            borderRadius: 16,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-          }
-        }
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: 16,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-          }
-        }
-      }
-    }
-  });
+  const theme = createTheme(createThemeFromPalette(selectedTheme, darkMode));
 
   if (showAccount) {
     return (

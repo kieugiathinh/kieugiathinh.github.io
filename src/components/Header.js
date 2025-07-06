@@ -7,6 +7,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase/config";
 import AvatarMenu from "./AvatarMenu";
 import { useResponsive } from "../hooks/useResponsive";
+import { createGradient } from "../utils/themeUtils";
 
 export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor, onMenuClick, onThemeClick, selectedTheme, setSelectedTheme }) {
   const [user] = useAuthState(auth);
@@ -65,7 +66,7 @@ export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode,
                 border: '2.5px solid', 
                 borderColor: 'transparent', 
                 boxShadow: 2, 
-                background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', 
+                background: (theme) => createGradient(theme, '90deg'), 
                 transition: 'border-color 0.3s, box-shadow 0.3s' 
               }}
             >
@@ -75,8 +76,8 @@ export default function Header({ onSearch, onAccountInfo, darkMode, setDarkMode,
                   width: isMobile ? 40 : 48, 
                   height: isMobile ? 40 : 48, 
                   border: '2.5px solid #fff', 
-                  boxShadow: '0 2px 8px 0 rgba(123,31,162,0.10)', 
-                  background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', 
+                  boxShadow: (theme) => `0 2px 8px 0 ${theme.palette.primary.main}20`, 
+                  background: (theme) => createGradient(theme, '90deg'), 
                   transition: 'border-color 0.3s, box-shadow 0.3s' 
                 }} 
               />

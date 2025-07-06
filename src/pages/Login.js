@@ -4,6 +4,7 @@ import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithEmai
 import { auth } from "../firebase/config";
 import GoogleIcon from "@mui/icons-material/Google";
 import { useResponsive } from "../hooks/useResponsive";
+import { getThemeColor } from "../utils/themeUtils";
 
 export default function Login() {
   const [tab, setTab] = useState(0);
@@ -83,7 +84,7 @@ export default function Login() {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      bgcolor: '#f3e5f5', 
+      bgcolor: 'background.default', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
@@ -99,7 +100,7 @@ export default function Login() {
         <Typography 
           variant="h4" 
           fontWeight={700} 
-          color="#7b1fa2" 
+          color="primary.main" 
           align="center" 
           mb={2}
           sx={{ fontSize: isMobile ? 28 : 32 }}

@@ -13,6 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import CloseIcon from "@mui/icons-material/Close";
 import { useResponsive } from "../hooks/useResponsive";
+import { getThemeColor } from "../utils/themeUtils";
 
 export default function ConfirmDialog({ 
   open, 
@@ -45,12 +46,12 @@ export default function ConfirmDialog({
         gap: 1,
         fontSize: isMobile ? 18 : 20,
         fontWeight: 600,
-        color: action === 'restore' ? '#43a047' : (action === 'permanent_delete' ? '#d32f2f' : '#7b1fa2')
+        color: action === 'restore' ? 'success.main' : (action === 'permanent_delete' ? 'error.main' : 'primary.main')
       }}>
         {action === 'restore' ? (
-          <RestoreIcon sx={{ color: '#43a047' }} />
+          <RestoreIcon sx={{ color: 'success.main' }} />
         ) : (
-          <DeleteIcon sx={{ color: action === 'permanent_delete' ? '#d32f2f' : '#7b1fa2' }} />
+          <DeleteIcon sx={{ color: action === 'permanent_delete' ? 'error.main' : 'primary.main' }} />
         )}
         {title}
         <IconButton
@@ -139,11 +140,7 @@ export default function ConfirmDialog({
           startIcon={action === 'restore' ? <RestoreIcon /> : <DeleteIcon />}
           sx={{ 
             fontSize: isMobile ? 14 : 16,
-            py: isMobile ? 0.5 : 1,
-            bgcolor: action === 'restore' ? '#43a047' : (action === 'permanent_delete' ? '#d32f2f' : '#7b1fa2'),
-            '&:hover': {
-              bgcolor: action === 'restore' ? '#2e7d32' : (action === 'permanent_delete' ? '#b71c1c' : '#5e548e')
-            }
+            py: isMobile ? 0.5 : 1
           }}
         >
           {action === 'restore' ? "Khôi phục" : (action === 'permanent_delete' ? "Xóa vĩnh viễn" : "Xóa")}

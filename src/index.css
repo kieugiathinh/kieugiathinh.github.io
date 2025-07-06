@@ -40,81 +40,6 @@ code {
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
   font-weight: 600;
 }
-/* Light mode */
-body:not([data-mui-color-scheme="dark"]) .MuiButton-containedPrimary {
-  background: #7b1fa2;
-  color: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-containedPrimary:hover {
-  background: #5e548e;
-  color: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-containedSecondary {
-  background: #ad1457;
-  color: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-containedSecondary:hover {
-  background: #7b1fa2;
-  color: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-outlinedPrimary {
-  border-color: #7b1fa2;
-  color: #7b1fa2;
-  background: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-outlinedPrimary:hover {
-  background: #ede7f6;
-  color: #5e548e;
-  border-color: #5e548e;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-outlinedSecondary {
-  border-color: #ad1457;
-  color: #ad1457;
-  background: #fff;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiButton-outlinedSecondary:hover {
-  background: #fce4ec;
-  color: #7b1fa2;
-  border-color: #7b1fa2;
-}
-
-/* Dark mode */
-body[data-mui-color-scheme="dark"] .MuiButton-containedPrimary {
-  background: #bb86fc;
-  color: #23272f;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-containedPrimary:hover {
-  background: #7b1fa2;
-  color: #fff;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-containedSecondary {
-  background: #03dac6;
-  color: #23272f;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-containedSecondary:hover {
-  background: #ad1457;
-  color: #fff;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-outlinedPrimary {
-  border-color: #bb86fc;
-  color: #bb86fc;
-  background: #23272f;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-outlinedPrimary:hover {
-  background: #2d2f3a;
-  color: #fff;
-  border-color: #bb86fc;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-outlinedSecondary {
-  border-color: #03dac6;
-  color: #03dac6;
-  background: #23272f;
-}
-body[data-mui-color-scheme="dark"] .MuiButton-outlinedSecondary:hover {
-  background: #23272f;
-  color: #ad1457;
-  border-color: #ad1457;
-}
 
 /* Nút upload file khi disabled vẫn có màu nền nhẹ, không bị mất màu */
 .MuiButton-contained.Mui-disabled {
@@ -127,33 +52,13 @@ body[data-mui-color-scheme="dark"] .MuiButton-outlinedSecondary:hover {
 .MuiIconButton-root {
   transition: background 0.25s, color 0.25s, box-shadow 0.25s;
 }
-body:not([data-mui-color-scheme="dark"]) .MuiIconButton-root {
-  color: #7b1fa2;
-}
-body:not([data-mui-color-scheme="dark"]) .MuiIconButton-root:hover {
-  background: #ede7f6;
-  color: #ad1457;
-}
-body[data-mui-color-scheme="dark"] .MuiIconButton-root {
-  color: #bb86fc;
-}
-body[data-mui-color-scheme="dark"] .MuiIconButton-root:hover {
-  background: #2d2f3a;
-  color: #03dac6;
-}
 
 /********************** AVATAR BORDER FIX **********************/
 .MuiAvatar-root {
   border: 2.5px solid transparent;
   background-clip: padding-box, border-box;
   background-origin: padding-box, border-box;
-  background-image: linear-gradient(#fff, #fff), linear-gradient(90deg, #ede7f6 0%, #bdbdbd 100%);
   transition: border-color 0.3s, box-shadow 0.3s;
-  box-shadow: 0 1px 6px 0 rgba(94,84,142,0.08);
-}
-.MuiAvatar-root:hover {
-  border-color: #b39ddb;
-  box-shadow: 0 2px 12px 0 rgba(94,84,142,0.13);
 }
 
 /********************** RESPONSIVE UTILITIES **********************/
@@ -195,13 +100,7 @@ body[data-mui-color-scheme="dark"] .MuiIconButton-root:hover {
 .MuiButton-root:focus-visible,
 .MuiIconButton-root:focus-visible,
 .MuiTextField-root:focus-visible {
-  outline: 2px solid #7b1fa2;
+  outline: 2px solid;
+  outline-color: var(--mui-palette-primary-main, #7b1fa2);
   outline-offset: 2px;
-}
-
-/* Dark mode focus states */
-body[data-mui-color-scheme="dark"] .MuiButton-root:focus-visible,
-body[data-mui-color-scheme="dark"] .MuiIconButton-root:focus-visible,
-body[data-mui-color-scheme="dark"] .MuiTextField-root:focus-visible {
-  outline-color: #bb86fc;
 }

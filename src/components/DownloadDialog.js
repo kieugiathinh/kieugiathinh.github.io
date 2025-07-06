@@ -16,6 +16,7 @@ import {
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { useResponsive } from "../hooks/useResponsive";
+import { getThemeColor } from "../utils/themeUtils";
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0B';
@@ -110,7 +111,7 @@ export default function DownloadDialog({
                 {filesInFolder.map((file, index) => (
                   <ListItem key={index} dense>
                     <ListItemIcon>
-                      <InsertDriveFileIcon sx={{ fontSize: 20, color: '#ad1457' }} />
+                      <InsertDriveFileIcon sx={{ fontSize: 20, color: 'secondary.main' }} />
                     </ListItemIcon>
                     <ListItemText 
                       primary={file.path || file.name}

@@ -6,6 +6,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import PaletteIcon from "@mui/icons-material/Palette";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ThemeDialog from "./ThemeDialog";
+import { createGradient } from "../utils/themeUtils";
 
 export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo, darkMode, setDarkMode, bgColor, setBgColor, selectedTheme, setSelectedTheme }) {
   const open = Boolean(anchorEl);
@@ -24,10 +25,10 @@ export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', p: 2, pb: 1 }}>
-          <Avatar src={user?.photoURL} sx={{ width: 44, height: 44, mr: 2, border: '2.5px solid #fff', boxShadow: '0 2px 8px 0 rgba(123,31,162,0.10)', background: 'linear-gradient(90deg, #bb86fc 0%, #7b1fa2 100%)', transition: 'border-color 0.3s, box-shadow 0.3s' }} />
+          <Avatar src={user?.photoURL} sx={{ width: 44, height: 44, mr: 2, border: '2.5px solid #fff', boxShadow: (theme) => `0 2px 8px 0 ${theme.palette.primary.main}20`, background: (theme) => createGradient(theme, '90deg'), transition: 'border-color 0.3s, box-shadow 0.3s' }} />
           <Box>
             <Typography sx={{ fontWeight: 600 }}>{user?.displayName}</Typography>
-            <Typography variant="body2" sx={{ color: '#888' }}>{user?.email}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{user?.email}</Typography>
           </Box>
         </Box>
         <Divider sx={{ my: 1 }} />
@@ -38,7 +39,7 @@ export default function AvatarMenu({ anchorEl, setAnchorEl, user, onAccountInfo,
           <PaletteIcon color="action" /> Chủ đề
         </MenuItem>
         <Divider sx={{ my: 1 }} />
-        <MenuItem onClick={() => { signOut(auth); handleClose(); }} sx={{ color: '#ad1457', gap: 1 }}>
+        <MenuItem onClick={() => { signOut(auth); handleClose(); }} sx={{ color: 'secondary.main', gap: 1 }}>
           <LogoutIcon /> Đăng xuất
         </MenuItem>
       </Menu>

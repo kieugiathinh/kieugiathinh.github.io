@@ -4,6 +4,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import CloseIcon from "@mui/icons-material/Close";
 import { useResponsive } from "../hooks/useResponsive";
+import { getThemeColor } from "../utils/themeUtils";
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0B';
@@ -80,7 +81,7 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
       <DialogTitle sx={{ 
         textAlign: 'center', 
         fontWeight: 700, 
-        color: '#7b1fa2',
+        color: 'primary.main',
         fontSize: isMobile ? 20 : 24
       }}>
         Tạo mới
@@ -113,14 +114,14 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
             component="label"
             startIcon={<CloudUploadIcon />}
             sx={{ 
-              bgcolor: '#ad1457', 
-              color: '#fff', 
+              bgcolor: 'secondary.main', 
+              color: 'secondary.contrastText', 
               fontWeight: 600, 
               borderRadius: 2, 
               fontSize: isMobile ? 14 : 16,
               px: isMobile ? 2 : 3,
               py: isMobile ? 1 : 1.5,
-              ':hover': { bgcolor: '#7b1fa2' } 
+              ':hover': { bgcolor: 'primary.main' } 
             }}
             disabled={uploading}
           >
@@ -137,7 +138,7 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
                 {file.name}
               </Typography>
               <Typography variant="caption" sx={{ 
-                color: '#888',
+                color: 'text.secondary',
                 fontSize: isMobile ? 12 : 14
               }}>
                 {formatBytes(file.size)}
@@ -160,8 +161,8 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
             variant="contained"
             startIcon={<CloudUploadIcon />}
             sx={{ 
-              bgcolor: '#7b1fa2', 
-              color: '#fff', 
+              bgcolor: 'primary.main', 
+              color: 'primary.contrastText', 
               fontWeight: 600, 
               borderRadius: 2, 
               width: '100%',
@@ -193,7 +194,7 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
           )}
           {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
           <Typography variant="body2" sx={{ 
-            color: '#888',
+            color: 'text.secondary',
             fontSize: isMobile ? 14 : 16
           }}>
             Hoặc tạo thư mục mới
@@ -211,8 +212,8 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
             variant="contained"
             startIcon={<CreateNewFolderIcon />}
             sx={{ 
-              bgcolor: '#43a047', 
-              color: '#fff', 
+              bgcolor: 'success.main', 
+              color: 'success.contrastText', 
               fontWeight: 600, 
               borderRadius: 2, 
               width: '100%',

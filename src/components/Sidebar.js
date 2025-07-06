@@ -7,6 +7,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { useResponsive } from "../hooks/useResponsive";
+import { getThemeColor } from "../utils/themeUtils";
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0B';
@@ -62,7 +63,7 @@ export default function Sidebar({ onNew, usedSize = 0, rootFolders = [], setCurr
           <span style={{ 
             fontWeight: 'bold', 
             fontSize: isMobile ? 24 : 28, 
-            color: '#7b1fa2' 
+            color: (theme) => theme.palette.primary.main
           }}>
             GTCloud
           </span>

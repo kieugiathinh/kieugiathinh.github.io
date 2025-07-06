@@ -7,6 +7,7 @@ import RestoreIcon from "@mui/icons-material/Restore";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useResponsive } from "../hooks/useResponsive";
 import ConfirmDialog from "./ConfirmDialog";
+import { getThemeColor } from "../utils/themeUtils";
 
 export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, isTrash, search }) {
   const { isMobile, isTablet } = useResponsive();
@@ -86,7 +87,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
         {items.length === 0 && (
           <Box sx={{ 
             textAlign: 'center', 
-            color: '#aaa', 
+            color: 'text.secondary', 
             py: isMobile ? 3 : 5, 
             fontSize: isMobile ? 16 : 20 
           }}>
@@ -147,7 +148,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   <IconButton 
                     onClick={(e) => handleRestoreClick(e, item)} 
                     sx={{ 
-                      color: '#43a047',
+                      color: 'success.main',
                       p: isMobile ? 0.5 : 1
                     }}
                   >
@@ -158,7 +159,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   <IconButton 
                     onClick={(e) => handleDeleteClick(e, item)} 
                     sx={{ 
-                      color: '#ad1457',
+                      color: 'secondary.main',
                       p: isMobile ? 0.5 : 1
                     }}
                   >
@@ -172,7 +173,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   <IconButton 
                     onClick={(e) => handleDownloadClick(e, item)} 
                     sx={{ 
-                      color: '#1976d2',
+                      color: 'primary.main',
                       p: isMobile ? 0.5 : 1
                     }}
                   >
@@ -183,7 +184,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   <IconButton 
                     onClick={(e) => handleDeleteClick(e, item)} 
                     sx={{ 
-                      color: '#ad1457',
+                      color: 'secondary.main',
                       p: isMobile ? 0.5 : 1
                     }}
                   >
