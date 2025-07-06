@@ -305,7 +305,18 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
               fontSize: isMobile ? 14 : 16,
               py: isMobile ? 1 : 1.5
             }}
-            onClick={() => { if (folderName) { onCreateFolder(folderName); setFolderName(""); handleClose(); } }}
+            onClick={async () => {
+              if (folderName) {
+                const result = await onCreateFolder(folderName);
+                if (result === false) {
+                  setError('Đã tồn tại thư mục cùng tên trong thư mục này!');
+                } else {
+                  setFolderName("");
+                  setError("");
+                  handleClose();
+                }
+              }
+            }}
             disabled={!folderName || uploading}
           >
             Tạo thư mục

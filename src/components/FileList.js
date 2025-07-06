@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { List, ListItem, ListItemIcon, ListItemText, IconButton, Box, Tooltip, useTheme, useMediaQuery } from "@mui/material";
+import { List, ListItem, ListItemIcon, ListItemText, IconButton, Box, Tooltip, useTheme, useMediaQuery, Typography } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,6 +8,14 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useResponsive } from "../hooks/useResponsive";
 import ConfirmDialog from "./ConfirmDialog";
 import { getThemeColor } from "../utils/themeUtils";
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, isTrash, search }) {
   const { isMobile, isTablet } = useResponsive();
@@ -138,6 +146,18 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
             }}>
               {renderHighlight(item)}
             </Box>
+            {item.type === "file" && item.size && (
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: isMobile ? 11 : 13,
+                  mt: 0.5
+                }}
+              >
+                {formatBytes(item.size)}
+              </Typography>
+            )}
           </Box>
           {isTrash ? (
             <>

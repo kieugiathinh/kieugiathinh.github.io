@@ -113,7 +113,7 @@ export default function Home() {
   // Lấy danh sách folder gốc
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "files"), where("owner", "==", user.uid), where("parent", "==", null), where("type", "==", "folder"), where("isDeleted", "!=", true));
+    const q = query(collection(db, "files"), where("owner", "==", user.uid), where("parent", "==", null), where("type", "==", "folder"), where("isDeleted", "in", [false, null]));
     const unsub = onSnapshot(q, (snap) => {
       setRootFolders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -126,7 +126,9 @@ export default function Home() {
     if (!isTrash) return;
     const q = query(collection(db, "files"), where("owner", "==", user.uid), where("isDeleted", "==", true));
     const unsub = onSnapshot(q, (snap) => {
-      setTrashItems(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`Thùng rác có ${items.length} item`);
+      setTrashItems(items);
     });
     return () => unsub();
   }, [user, isTrash]);
@@ -134,14 +136,26 @@ export default function Home() {
   // Tính tổng dung lượng các file (dựa vào trường size trong Firestore)
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "files"), where("owner", "==", user.uid), where("type", "==", "file"), where("isDeleted", "!=", true));
+    const q = query(collection(db, "files"), where("owner", "==", user.uid), where("type", "==", "file"), where("isDeleted", "in", [false, null]));
     const unsub = onSnapshot(q, (snap) => {
       let total = 0;
+      console.log(`Tính toán dung lượng cho ${snap.docs.length} file`);
       for (const docSnap of snap.docs) {
         const data = docSnap.data();
-        if (data.size) total += data.size;
+        if (data.size && typeof data.size === 'number' && data.size > 0) {
+          total += data.size;
+          console.log(`File: ${data.name}, Size: ${data.size}, Total so far: ${total}`);
+        } else {
+          console.warn(`File ${data.name} có size không hợp lệ:`, data.size);
+        }
       }
+      console.log(`Tổng dung lượng cuối cùng: ${total}`);
       setUsedSize(total);
+      
+      // Thêm một số thông tin debug
+      if (total > 0) {
+        console.log(`Dung lượng đã sử dụng: ${formatBytes(total)}`);
+      }
     });
     return () => unsub();
   }, [user]);
@@ -152,17 +166,45 @@ export default function Home() {
       collection(db, "files"),
       where("parent", "==", currentFolder || null),
       where("owner", "==", user.uid),
-      where("isDeleted", "!=", true)
+      where("isDeleted", "in", [false, null])
     );
     const unsub = onSnapshot(q, (snap) => {
-      setItems(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`Thư mục hiện tại có ${items.length} item`);
+      setItems(items);
     });
     return () => unsub();
   }, [user, currentFolder, isTrash]);
 
   // Xóa mềm (chuyển vào thùng rác)
   const handleSoftDelete = async (item) => {
-    await updateDoc(doc(db, "files", item.id), { isDeleted: true });
+    // Nếu là file, chỉ cần đánh dấu xóa
+    if (item.type === "file") {
+      await updateDoc(doc(db, "files", item.id), { isDeleted: true });
+      return;
+    }
+    // Nếu là folder, đánh dấu xóa đệ quy tất cả file/folder con
+    const markDeletedRecursive = async (folderId) => {
+      // Đánh dấu xóa folder hiện tại
+      await updateDoc(doc(db, "files", folderId), { isDeleted: true });
+      // Lấy tất cả file/folder con trực tiếp
+      const q = query(
+        collection(db, "files"),
+        where("parent", "==", folderId),
+        where("owner", "==", user.uid),
+        // Không cần check isDeleted, vì có thể xóa lại folder đã khôi phục
+      );
+      const snap = await getDocs(q);
+      for (const docSnap of snap.docs) {
+        const child = { id: docSnap.id, ...docSnap.data() };
+        if (child.type === "file") {
+          await updateDoc(doc(db, "files", child.id), { isDeleted: true });
+        } else if (child.type === "folder") {
+          await markDeletedRecursive(child.id);
+        }
+      }
+    };
+    await markDeletedRecursive(item.id);
   };
 
   // Xóa vĩnh viễn
@@ -181,22 +223,48 @@ export default function Home() {
 
   // Upload file: lưu thêm trường size
   const handleUpload = async (file) => {
-    const storageRef = ref(storage, `${user.uid}/${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    await addDoc(collection(db, "files"), {
-      name: file.name,
-      type: "file",
-      url,
-      owner: user.uid,
-      parent: currentFolder || null,
-      createdAt: new Date(),
-      isDeleted: false,
-      size: file.size
-    });
+    try {
+      // Validate file size
+      if (!file.size || typeof file.size !== 'number' || file.size <= 0) {
+        throw new Error(`File ${file.name} có kích thước không hợp lệ: ${file.size}`);
+      }
+      
+      console.log(`Bắt đầu upload file: ${file.name}, size: ${file.size}`);
+      const storageRef = ref(storage, `${user.uid}/${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      const docRef = await addDoc(collection(db, "files"), {
+        name: file.name,
+        type: "file",
+        url,
+        owner: user.uid,
+        parent: currentFolder || null,
+        createdAt: new Date(),
+        isDeleted: false,
+        size: file.size
+      });
+      console.log(`Upload thành công file: ${file.name}, docId: ${docRef.id}`);
+    } catch (error) {
+      console.error(`Lỗi khi upload file ${file.name}:`, error);
+      throw error;
+    }
   };
 
   const handleCreateFolder = async (name) => {
+    // Kiểm tra trùng tên folder trong cùng parent
+    const q = query(
+      collection(db, "files"),
+      where("owner", "==", user.uid),
+      where("parent", "==", currentFolder || null),
+      where("type", "==", "folder"),
+      where("isDeleted", "in", [false, null]),
+      where("name", "==", name)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      // Đã có folder trùng tên
+      return false;
+    }
     await addDoc(collection(db, "files"), {
       name,
       type: "folder",
@@ -205,6 +273,7 @@ export default function Home() {
       createdAt: new Date(),
       isDeleted: false
     });
+    return true;
   };
 
   // Hàm lấy tất cả file trong folder (đệ quy)
@@ -214,7 +283,7 @@ export default function Home() {
       collection(db, "files"),
       where("parent", "==", folderId),
       where("owner", "==", user.uid),
-      where("isDeleted", "!=", true)
+      where("isDeleted", "in", [false, null])
     );
     const snapshot = await getDocs(q);
     
