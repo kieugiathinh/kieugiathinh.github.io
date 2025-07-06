@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent, Button, TextField, Stack, Typography, LinearProgress, Alert, IconButton, Box, useTheme, useMediaQuery } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, Button, TextField, Stack, Typography, LinearProgress, Alert, IconButton, Box, useTheme, useMediaQuery, Chip, List, ListItem, ListItemText, ListItemSecondaryAction } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useResponsive } from "../hooks/useResponsive";
 import { getThemeColor } from "../utils/themeUtils";
 
@@ -15,9 +16,9 @@ function formatBytes(bytes) {
 }
 
 export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, currentFolderName = "Trang chủ" }) {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [folderName, setFolderName] = useState("");
-  const [progress, setProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState({});
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -25,56 +26,102 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
   const theme = useTheme();
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(prev => [...prev, ...selectedFiles]);
     setMessage("");
     setError("");
-    setProgress(0);
+  };
+
+  const removeFile = (index) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[index];
+      return newProgress;
+    });
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setUploading(true);
     setMessage("");
     setError("");
+    
     try {
-      // Giả lập progress (vì uploadBytes không có callback progress)
-      let fakeProgress = 0;
-      const interval = setInterval(() => {
-        fakeProgress += 10;
-        setProgress(Math.min(fakeProgress, 90));
-      }, 80);
-      await onUpload(file);
-      clearInterval(interval);
-      setProgress(100);
-      setMessage("Tải lên thành công!");
-      setFile(null);
+      const totalFiles = files.length;
+      let completedFiles = 0;
+      let failedFiles = 0;
+
+      // Upload từng file với progress tracking
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Giả lập progress cho từng file
+        let fakeProgress = 0;
+        const interval = setInterval(() => {
+          fakeProgress += 10;
+          setUploadProgress(prev => ({
+            ...prev,
+            [i]: Math.min(fakeProgress, 90)
+          }));
+        }, 80);
+
+        try {
+          await onUpload(file);
+          clearInterval(interval);
+          setUploadProgress(prev => ({
+            ...prev,
+            [i]: 100
+          }));
+          completedFiles++;
+        } catch (e) {
+          clearInterval(interval);
+          failedFiles++;
+          console.error(`Upload failed for file ${file.name}:`, e);
+        }
+      }
+
+      // Hiển thị kết quả
+      if (failedFiles === 0) {
+        setMessage(`Tải lên thành công ${totalFiles} file!`);
+      } else if (completedFiles === 0) {
+        setError("Tải lên thất bại tất cả file. Vui lòng thử lại!");
+      } else {
+        setMessage(`Tải lên thành công ${completedFiles}/${totalFiles} file. ${failedFiles} file thất bại.`);
+      }
+
+      // Reset files và progress
+      setFiles([]);
+      setUploadProgress({});
       
-      // Tự động đóng dialog sau 1 giây khi upload thành công
+      // Tự động đóng dialog sau 2 giây
       setTimeout(() => {
         handleClose();
-      }, 1000);
+      }, 2000);
     } catch (e) {
       setError("Tải lên thất bại. Vui lòng thử lại!");
     }
     setUploading(false);
-    setTimeout(() => setProgress(0), 1200);
+    setTimeout(() => setUploadProgress({}), 1200);
   };
 
   const handleClose = () => {
-    setFile(null);
+    setFiles([]);
     setFolderName("");
-    setProgress(0);
+    setUploadProgress({});
     setMessage("");
     setError("");
     setUploading(false);
     onClose();
   };
 
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
   return (
     <Dialog 
       open={open} 
       onClose={handleClose} 
-      maxWidth={isMobile ? "sm" : "xs"} 
+      maxWidth={isMobile ? "sm" : "md"} 
       fullWidth
       fullScreen={isMobile}
     >
@@ -125,38 +172,74 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
             }}
             disabled={uploading}
           >
-            {file ? "Chọn lại file" : "Chọn file"}
-            <input type="file" hidden onChange={handleFileChange} />
+            Chọn file
+            <input type="file" multiple hidden onChange={handleFileChange} />
           </Button>
-          {file && (
-            <Box sx={{ width: '100%', textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ 
-                fontWeight: 500, 
-                fontSize: isMobile ? 14 : 16,
-                wordBreak: 'break-word'
-              }}>
-                {file.name}
-              </Typography>
-              <Typography variant="caption" sx={{ 
-                color: 'text.secondary',
-                fontSize: isMobile ? 12 : 14
-              }}>
-                {formatBytes(file.size)}
-              </Typography>
-            </Box>
-          )}
-          {progress > 0 && (
+
+          {files.length > 0 && (
             <Box sx={{ width: '100%' }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={progress} 
-                sx={{ 
-                  height: isMobile ? 6 : 8, 
-                  borderRadius: 2 
-                }} 
-              />
+              <Typography variant="body2" sx={{ 
+                fontWeight: 600, 
+                fontSize: isMobile ? 14 : 16,
+                mb: 1,
+                textAlign: 'center'
+              }}>
+                Đã chọn {files.length} file ({formatBytes(totalSize)})
+              </Typography>
+              
+              <List sx={{ maxHeight: 250, minHeight: 40, overflowY: 'auto', width: '100%', bgcolor: 'grey.50', borderRadius: 1, border: '1px solid #eee' }}>
+                {files.map((file, index) => (
+                  <ListItem key={index} sx={{ py: 0.5 }}>
+                    <ListItemText
+                      primary={file.name}
+                      secondary={formatBytes(file.size)}
+                      primaryTypographyProps={{
+                        fontSize: isMobile ? 12 : 14,
+                        fontWeight: 500
+                      }}
+                      secondaryTypographyProps={{
+                        fontSize: isMobile ? 10 : 12
+                      }}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton 
+                        edge="end" 
+                        onClick={() => removeFile(index)}
+                        disabled={uploading}
+                        size="small"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+
+              {/* Progress bars cho từng file */}
+              {Object.keys(uploadProgress).length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  {files.map((file, index) => (
+                    uploadProgress[index] !== undefined && (
+                      <Box key={index} sx={{ mb: 1 }}>
+                        <Typography variant="caption" sx={{ display: 'block', mb: 0.5 }}>
+                          {file.name}
+                        </Typography>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={uploadProgress[index]} 
+                          sx={{ 
+                            height: 4, 
+                            borderRadius: 2 
+                          }} 
+                        />
+                      </Box>
+                    )
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
+
           <Button
             variant="contained"
             startIcon={<CloudUploadIcon />}
@@ -170,10 +253,11 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
               py: isMobile ? 1 : 1.5
             }}
             onClick={handleUpload}
-            disabled={!file || uploading}
+            disabled={files.length === 0 || uploading}
           >
-            {uploading ? "Đang tải lên..." : "Upload file"}
+            {uploading ? `Đang tải lên ${files.length} file...` : `Upload ${files.length} file`}
           </Button>
+
           {message && (
             <Alert 
               severity="success" 
@@ -193,6 +277,7 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
             </Alert>
           )}
           {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+          
           <Typography variant="body2" sx={{ 
             color: 'text.secondary',
             fontSize: isMobile ? 14 : 16

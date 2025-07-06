@@ -117,7 +117,7 @@ export default function Sidebar({ onNew, usedSize = 0, rootFolders = [], setCurr
             Trang chủ
           </Button>
           {/* Danh sách folder gốc */}
-          <List dense sx={{ mb: 1 }}>
+          <List dense sx={{ mb: 1, maxHeight: 250, overflowY: 'auto', minHeight: 40, borderRadius: 1, border: '1px solid #eee' }}>
             {rootFolders.map(folder => (
               <ListItemButton
                 key={folder.id}

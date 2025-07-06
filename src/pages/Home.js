@@ -433,11 +433,13 @@ export default function Home() {
           />
           <Box sx={{ 
             flex: 1, 
-            borderRadius: 3, 
+            borderRadius: 2, 
             p: isMobile ? 1 : 2, 
             bgcolor: 'background.paper', 
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)', 
-            minHeight: isMobile ? 300 : 400 
+            minHeight: isMobile ? 300 : 400,
+            height: isMobile ? '100vh' : '96vh',
+            overflowY: 'auto' 
           }}>
             {/* Hiển thị thông báo lỗi download */}
             {downloadError && (
