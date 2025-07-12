@@ -75,6 +75,7 @@ export default function Home() {
   const [emailVerificationLoading, setEmailVerificationLoading] = useState(false);
   const [emailVerificationMessage, setEmailVerificationMessage] = useState("");
   const { isMobile, isTablet } = useResponsive();
+  const [selectedItems, setSelectedItems] = useState([]);
 
   // Lưu darkMode vào localStorage mỗi khi thay đổi
   useEffect(() => {
@@ -452,6 +453,27 @@ export default function Home() {
     setEmailVerificationMessage("");
   };
 
+  // Thêm hàm xử lý chọn/bỏ chọn item
+  const handleSelectItem = (itemId) => {
+    setSelectedItems(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
+  };
+  // Chọn tất cả
+  const handleSelectAll = (allIds) => {
+    setSelectedItems(allIds);
+  };
+  // Bỏ chọn tất cả
+  const handleDeselectAll = () => {
+    setSelectedItems([]);
+  };
+  // Xóa hàng loạt
+  const handleBulkDelete = async () => {
+    for (const id of selectedItems) {
+      const item = items.find(i => i.id === id);
+      if (item) await handleSoftDelete(item);
+    }
+    setSelectedItems([]);
+  };
+
   if (loading) return <div>Đang tải...</div>;
   if (!user) return <Login />;
 
@@ -554,11 +576,50 @@ export default function Home() {
                 >
                   Thùng rác
                 </Typography>
+                {/* Nút xóa vĩnh viễn và khôi phục hàng loạt */}
+                {selectedItems.length > 0 && (
+                  <Stack direction="row" spacing={2} mb={2}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<RestoreIcon />}
+                      sx={{ fontWeight: 600, borderRadius: 2, fontSize: isMobile ? 12 : 14, py: isMobile ? 0.5 : 1 }}
+                      onClick={async () => {
+                        for (const id of selectedItems) {
+                          const item = trashItems.find(i => i.id === id);
+                          if (item) await handleRestore(item);
+                        }
+                        setSelectedItems([]);
+                      }}
+                    >
+                      Khôi phục đã chọn ({selectedItems.length})
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      sx={{ fontWeight: 600, borderRadius: 2, fontSize: isMobile ? 12 : 14, py: isMobile ? 0.5 : 1 }}
+                      onClick={async () => {
+                        for (const id of selectedItems) {
+                          const item = trashItems.find(i => i.id === id);
+                          if (item) await handlePermanentDelete(item);
+                        }
+                        setSelectedItems([]);
+                      }}
+                    >
+                      Xóa vĩnh viễn đã chọn ({selectedItems.length})
+                    </Button>
+                  </Stack>
+                )}
                 <FileList
                   items={trashItems}
                   onDelete={handlePermanentDelete}
                   onRestore={handleRestore}
                   isTrash={true}
+                  selectedItems={selectedItems}
+                  onSelectItem={handleSelectItem}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
                 />
               </>
             ) : (
@@ -609,12 +670,28 @@ export default function Home() {
                     Tải lên
                   </Button>
                 </Stack>
+                {/* Nút xóa hàng loạt */}
+                {selectedItems.length > 0 && (
+                  <Button
+                    variant="contained"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    sx={{ ml: 2, fontWeight: 600, borderRadius: 2, fontSize: isMobile ? 12 : 14, py: isMobile ? 0.5 : 1 }}
+                    onClick={handleBulkDelete}
+                  >
+                    Xóa đã chọn ({selectedItems.length})
+                  </Button>
+                )}
                 <FileList
                   items={search ? fuzzysort.go(search, items, { key: 'name', allowTypo: true, threshold: -10000 }).map(r => ({ ...r.obj, _highlight: r })) : items.map(i => ({ ...i, _highlight: null }))}
                   onDelete={handleSoftDelete}
                   onOpenFolder={folder => setCurrentFolder(folder.id)}
                   onDownload={handleDownload}
                   search={search}
+                  selectedItems={selectedItems}
+                  onSelectItem={handleSelectItem}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
                 />
               </>
             )}

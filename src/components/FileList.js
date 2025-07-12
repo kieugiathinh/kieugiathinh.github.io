@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { List, ListItem, ListItemIcon, ListItemText, IconButton, Box, Tooltip, useTheme, useMediaQuery, Typography } from "@mui/material";
+import { List, ListItem, ListItemIcon, ListItemText, IconButton, Box, Tooltip, useTheme, useMediaQuery, Typography, Checkbox } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,7 +17,7 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, isTrash, search }) {
+export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, isTrash, search, selectedItems = [], onSelectItem, onSelectAll, onDeselectAll }) {
   const { isMobile, isTablet } = useResponsive();
   const theme = useTheme();
   const [confirmDialog, setConfirmDialog] = useState({
@@ -85,6 +85,12 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
       action: null
     });
   };
+
+  // Lấy danh sách id
+  const allIds = items.map(i => i.id);
+  const allSelected = allIds.length > 0 && allIds.every(id => selectedItems.includes(id));
+  const someSelected = allIds.some(id => selectedItems.includes(id));
+
   return (
     <>
       {items.length === 0 && (
@@ -95,6 +101,20 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
           fontSize: isMobile ? 16 : 20 
         }}>
           Không tìm thấy file hoặc thư mục nào phù hợp.
+        </Box>
+      )}
+      {/* Header chọn tất cả */}
+      {selectedItems && onSelectAll && onDeselectAll && items.length > 0 && (
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, pl: isMobile ? 1 : 2 }}>
+          <Checkbox
+            checked={allSelected}
+            indeterminate={!allSelected && someSelected}
+            onChange={e => e.target.checked ? onSelectAll(allIds) : onDeselectAll()}
+            size={isMobile ? 'small' : 'medium'}
+          />
+          <Typography sx={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>
+            Chọn tất cả
+          </Typography>
         </Box>
       )}
       {items.map(item => (
@@ -121,6 +141,15 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
             // Không đặt maxHeight, overflow ở đây
           }}
         >
+          {/* Checkbox từng item */}
+          {selectedItems && onSelectItem && (
+            <Checkbox
+              checked={selectedItems.includes(item.id)}
+              onChange={e => { e.stopPropagation(); onSelectItem(item.id); }}
+              size={isMobile ? 'small' : 'medium'}
+              sx={{ mr: 1 }}
+            />
+          )}
           {item.type === "folder" ? 
             <FolderIcon sx={{ 
               color: 'primary.main', 
