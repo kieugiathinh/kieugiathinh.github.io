@@ -5,6 +5,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
 import DownloadIcon from "@mui/icons-material/Download";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useResponsive } from "../hooks/useResponsive";
 import ConfirmDialog from "./ConfirmDialog";
 import { getThemeColor } from "../utils/themeUtils";
@@ -17,7 +18,7 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, isTrash, search, selectedItems = [], onSelectItem, onSelectAll, onDeselectAll }) {
+export default function FileList({ items, onDelete, onOpenFolder, onRestore, onDownload, onView, isTrash, search, selectedItems = [], onSelectItem, onSelectAll, onDeselectAll }) {
   const { isMobile, isTablet } = useResponsive();
   const theme = useTheme();
   const [confirmDialog, setConfirmDialog] = useState({
@@ -34,7 +35,7 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
       const out = [];
       idxs.forEach((idx, i) => {
         if (idx > last) out.push(<span key={last + '-n'}>{str.slice(last, idx)}</span>);
-        out.push(<span key={idx} style={{ background: 'yellow', color: '#000', borderRadius: 2 }}>{str[idx]}</span>);
+        out.push(<span key={idx} style={{ background: '#e8d5ff', color: '#4a148c', borderRadius: 2, fontWeight: 600 }}>{str[idx]}</span>);
         last = idx + 1;
       });
       if (last < str.length) out.push(<span key={last + '-end'}>{str.slice(last)}</span>);
@@ -65,6 +66,13 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
     e.stopPropagation(); // Ngăn chặn sự kiện click lan ra ngoài
     if (onDownload) {
       onDownload(item);
+    }
+  };
+
+  const handleViewClick = (e, item) => {
+    e.stopPropagation(); // Ngăn chặn sự kiện click lan ra ngoài
+    if (onView && item.type === "file") {
+      onView(item);
     }
   };
 
@@ -195,7 +203,12 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   onClick={(e) => { e.stopPropagation(); handleRestoreClick(e, item); }} 
                   sx={{ 
                     color: 'success.main',
-                    p: isMobile ? 0.5 : 1
+                    p: isMobile ? 0.5 : 1,
+                    '&:hover': {
+                      bgcolor: 'success.light',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <RestoreIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
@@ -206,7 +219,12 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   onClick={(e) => { e.stopPropagation(); handleDeleteClick(e, item); }} 
                   sx={{ 
                     color: 'secondary.main',
-                    p: isMobile ? 0.5 : 1
+                    p: isMobile ? 0.5 : 1,
+                    '&:hover': {
+                      bgcolor: 'secondary.light',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <DeleteIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
@@ -215,12 +233,35 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
             </>
           ) : (
             <>
+              {item.type === "file" && (
+                <Tooltip title="Xem">
+                  <IconButton 
+                    onClick={(e) => { e.stopPropagation(); handleViewClick(e, item); }} 
+                    sx={{ 
+                      color: 'secondary.main',
+                      p: isMobile ? 0.5 : 1,
+                      '&:hover': {
+                        bgcolor: 'secondary.light',
+                        transform: 'scale(1.1)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <VisibilityIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
               <Tooltip title="Tải xuống">
                 <IconButton 
                   onClick={(e) => { e.stopPropagation(); handleDownloadClick(e, item); }} 
                   sx={{ 
                     color: 'primary.main',
-                    p: isMobile ? 0.5 : 1
+                    p: isMobile ? 0.5 : 1,
+                    '&:hover': {
+                      bgcolor: 'primary.light',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <DownloadIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
@@ -231,7 +272,12 @@ export default function FileList({ items, onDelete, onOpenFolder, onRestore, onD
                   onClick={(e) => { e.stopPropagation(); handleDeleteClick(e, item); }} 
                   sx={{ 
                     color: 'secondary.main',
-                    p: isMobile ? 0.5 : 1
+                    p: isMobile ? 0.5 : 1,
+                    '&:hover': {
+                      bgcolor: 'secondary.light',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <DeleteIcon sx={{ fontSize: isMobile ? 20 : 24 }} />

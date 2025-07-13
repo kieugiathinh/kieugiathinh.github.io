@@ -17,6 +17,7 @@ import Header from "../components/Header";
 import FileList from "../components/FileList";
 import UploadDialog from "../components/UploadDialog";
 import DownloadDialog from "../components/DownloadDialog";
+import ViewDialog from "../components/ViewDialog";
 import ThemeSelector from "../components/ThemeSelector";
 import ThemeInfo from "../components/ThemeInfo";
 import Login from "./Login";
@@ -59,6 +60,10 @@ export default function Home() {
     item: null,
     filesInFolder: [],
     loading: false
+  });
+  const [viewDialog, setViewDialog] = useState({
+    open: false,
+    item: null
   });
   const [themeDialog, setThemeDialog] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(() => {
@@ -423,6 +428,14 @@ export default function Home() {
     setDownloadDialog({ open: false, item: null, filesInFolder: [], loading: false });
   };
 
+  const handleViewFile = (item) => {
+    setViewDialog({ open: true, item: item });
+  };
+
+  const handleCloseViewDialog = () => {
+    setViewDialog({ open: false, item: null });
+  };
+
   // Hàm xử lý thay đổi theme
   const handleThemeChange = (theme) => {
     setSelectedTheme(theme);
@@ -615,6 +628,7 @@ export default function Home() {
                   items={trashItems}
                   onDelete={handlePermanentDelete}
                   onRestore={handleRestore}
+                  onView={handleViewFile}
                   isTrash={true}
                   selectedItems={selectedItems}
                   onSelectItem={handleSelectItem}
@@ -687,6 +701,7 @@ export default function Home() {
                   onDelete={handleSoftDelete}
                   onOpenFolder={folder => setCurrentFolder(folder.id)}
                   onDownload={handleDownload}
+                  onView={handleViewFile}
                   search={search}
                   selectedItems={selectedItems}
                   onSelectItem={handleSelectItem}
@@ -713,6 +728,13 @@ export default function Home() {
           item={downloadDialog.item}
           filesInFolder={downloadDialog.filesInFolder}
           loading={downloadDialog.loading}
+        />
+        
+        {/* View Dialog */}
+        <ViewDialog
+          open={viewDialog.open}
+          onClose={handleCloseViewDialog}
+          item={viewDialog.item}
         />
         
         {/* Theme Selector Dialog */}

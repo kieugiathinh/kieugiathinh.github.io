@@ -121,9 +121,17 @@ export default function UploadDialog({ open, onClose, onUpload, onCreateFolder, 
     <Dialog 
       open={open} 
       onClose={handleClose} 
-      maxWidth={isMobile ? "sm" : "md"} 
-      fullWidth
+      maxWidth={false}
+      fullWidth={!isMobile}
       fullScreen={isMobile}
+      sx={{
+        '& .MuiDialog-paper': {
+          width: isMobile ? '100%' : '600px',
+          maxWidth: isMobile ? '100%' : '90vw',
+          maxHeight: isMobile ? '100%' : '80vh',
+          borderRadius: isMobile ? 0 : 2
+        }
+      }}
     >
       <DialogTitle sx={{ 
         textAlign: 'center', 
